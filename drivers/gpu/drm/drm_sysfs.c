@@ -700,6 +700,31 @@ static ssize_t oneplus_display_set_forcescreenfp(struct device *dev,
 	return count;
 }
 
+static ssize_t oneplus_display_get_mode(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct drm_connector *connector = to_drm_connector(dev);
+	int ret = 0;
+
+	ret = dsi_display_get_display_mode(connector, dev, attr, buf);
+	if (ret)
+		pr_err("read display mode(%d) fail\n", ret);
+	return ret;
+}
+
+static ssize_t oneplus_display_set_mode(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct drm_connector *connector = to_drm_connector(dev);
+	int ret = 0;
+
+	ret = dsi_display_set_display_mode(connector, dev, attr, buf, count);
+	if (ret) {
+		pr_err("set display mode(%d) fail\n", ret);
+	}
+	return ret;
+}
+
 extern  ssize_t oneplus_display_notify_fp_press(struct device *dev,
 		struct device_attribute *attr,
 		const char *buf, size_t count);
@@ -735,6 +760,7 @@ static DEVICE_ATTR(force_screenfp, S_IRUGO|S_IWUSR, oneplus_display_get_forcescr
 static DEVICE_ATTR(notify_fppress, S_IRUGO|S_IWUSR, NULL, oneplus_display_notify_fp_press);
 static DEVICE_ATTR(notify_dim, S_IRUGO|S_IWUSR, NULL, oneplus_display_notify_dim);
 static DEVICE_ATTR(notify_aod, S_IRUGO|S_IWUSR, NULL, oneplus_display_notify_aod_hid);
+static DEVICE_ATTR(display_mode, S_IRUGO|S_IWUSR, oneplus_display_get_mode, oneplus_display_set_mode);
 
 static struct attribute *connector_dev_attrs[] = {
 	&dev_attr_status.attr,
@@ -759,6 +785,7 @@ static struct attribute *connector_dev_attrs[] = {
 	&dev_attr_notify_fppress.attr,
         &dev_attr_notify_dim.attr,
 	&dev_attr_notify_aod.attr,
+	&dev_attr_display_mode.attr,
 	NULL
 };
 
