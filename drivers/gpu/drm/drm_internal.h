@@ -121,6 +121,10 @@ int dsi_display_set_aod_disable(struct drm_connector *connector, int disable);
 int dsi_display_get_aod_disable(struct drm_connector *connector);
 int dsi_display_set_fp_hbm_mode(struct drm_connector *connector, int level);
 int dsi_display_get_fp_hbm_mode(struct drm_connector *connector);
+ssize_t dsi_display_set_display_mode(struct drm_connector *connector, struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count);
+ssize_t dsi_display_get_display_mode(struct drm_connector *connector, struct device *dev,
+		struct device_attribute *attr, char *buf);
 
 /* drm_debugfs.c */
 #if defined(CONFIG_DEBUG_FS)

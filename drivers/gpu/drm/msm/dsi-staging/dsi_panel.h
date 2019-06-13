@@ -155,6 +155,15 @@ enum dsi_panel_type {
 	DSI_PANEL_TYPE_MAX,
 };
 
+enum dsi_panel_display_mode {
+	DISPLAY_MODE_DEFAULT,
+	DISPLAY_MODE_SRGB,
+	DISPLAY_MODE_DCI_P3,
+	DISPLAY_MODE_NIGHT,
+	DISPLAY_MODE_ONEPLUS,
+	DISPLAY_MODE_ADAPTION
+};
+
 struct dsi_panel {
 	const char *name;
 	enum dsi_panel_type type;
@@ -206,6 +215,7 @@ struct dsi_panel {
 	int night_mode;
 	int oneplus_mode;
 	int adaption_mode;
+	enum dsi_panel_display_mode display_mode;
 	int status_value;
 	int panel_mismatch_check;
     int panel_mismatch;
@@ -336,5 +346,6 @@ int dsi_panel_set_dci_p3_mode(struct dsi_panel *panel, int level);
 int dsi_panel_set_night_mode(struct dsi_panel *panel, int level);
 int dsi_panel_set_oneplus_mode(struct dsi_panel *panel, int level);
 int dsi_panel_set_adaption_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_display_mode(struct dsi_panel *panel);
 
 #endif /* _DSI_PANEL_H_ */
