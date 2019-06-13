@@ -7246,6 +7246,98 @@ int dsi_display_get_adaption_mode(struct drm_connector *connector)
 	return dsi_display->panel->adaption_mode;
 }
 
+int dsi_display_set_display_mode(struct drm_connector *connector, struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+    struct dsi_display *dsi_display = NULL;
+    struct dsi_panel *panel = NULL;
+    struct dsi_bridge *c_bridge;
+    enum dsi_panel_display_mode mode;
+    int rc = 0;
+
+    if ((connector == NULL) || (connector->encoder == NULL)
+            || (connector->encoder->bridge == NULL))
+        return 0;
+
+    c_bridge =  to_dsi_bridge(connector->encoder->bridge);
+    dsi_display = c_bridge->display;
+
+    if ((dsi_display == NULL) || (dsi_display->panel == NULL))
+        return -EINVAL;
+
+    panel = dsi_display->panel;
+
+    if (!strcmp(buf, "srgb"))
+        mode = DISPLAY_MODE_SRGB;
+    else if (!strcmp(buf, "dci-p3"))
+        mode = DISPLAY_MODE_DCI_P3;
+    else if (!strcmp(buf, "night"))
+        mode = DISPLAY_MODE_NIGHT;
+    else if (!strcmp(buf, "oneplus"))
+        mode = DISPLAY_MODE_ONEPLUS;
+    else if (!strcmp(buf, "adaption"))
+        mode = DISPLAY_MODE_ADAPTION;
+    else if (!strcmp(buf, "default"))
+        mode = DISPLAY_MODE_DEFAULT;
+    else
+        return -EINVAL;
+
+    mutex_lock(&dsi_display->display_lock);
+
+    panel->display_mode = mode;
+    if (!dsi_panel_initialized(panel)) {
+        goto error;
+    }
+
+    rc = dsi_display_clk_ctrl(dsi_display->dsi_clk_handle,
+        DSI_CORE_CLK, DSI_CLK_ON);
+    if (rc) {
+        pr_err("[%s] failed to enable DSI core clocks, rc=%d\n",
+            dsi_display->name, rc);
+        goto error;
+    }
+
+    rc = dsi_panel_set_display_mode(panel);
+    if (rc)
+        pr_err("unable to set display mode\n");
+
+    rc = dsi_display_clk_ctrl(dsi_display->dsi_clk_handle,
+        DSI_CORE_CLK, DSI_CLK_OFF);
+    if (rc) {
+        pr_err("[%s] failed to disable DSI core clocks, rc=%d\n",
+            dsi_display->name, rc);
+        goto error;
+    }
+error:
+    mutex_unlock(&dsi_display->display_lock);
+    return rc == 0 ? count : rc;
+}
+
+int dsi_display_get_display_mode(struct drm_connector *connector, struct device *dev,
+        struct device_attribute *attr, char *buf, size_t count)
+{
+    struct dsi_display *dsi_display = NULL;
+    struct dsi_bridge *c_bridge;
+
+    if ((connector == NULL) || (connector->encoder == NULL)
+            || (connector->encoder->bridge == NULL))
+        return 0;
+
+    c_bridge =  to_dsi_bridge(connector->encoder->bridge);
+    dsi_display = c_bridge->display;
+
+    if ((dsi_display == NULL) || (dsi_display->panel == NULL))
+        return 0;
+
+    return scnprintf(buf, PAGE_SIZE, "%s\n",
+        dsi_display->panel->display_mode == DISPLAY_MODE_SRGB ? "srgb" :
+        dsi_display->panel->display_mode == DISPLAY_MODE_DCI_P3 ? "dci-p3" :
+        dsi_display->panel->display_mode == DISPLAY_MODE_NIGHT ? "night" :
+        dsi_display->panel->display_mode == DISPLAY_MODE_ONEPLUS ? "oneplus" :
+        dsi_display->panel->display_mode == DISPLAY_MODE_ADAPTION ? "adaption" :
+        "default");
+}
+
 int dsi_display_set_aod_mode(struct drm_connector *connector, int level)
 {
     struct dsi_display *dsi_display = NULL;
